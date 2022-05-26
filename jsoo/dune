@@ -1,0 +1,5 @@
+(library
+ (public_name unicorn_jsoo)
+ (libraries js_of_ocaml optic)
+ (preprocess
+  (pps js_of_ocaml-ppx)))

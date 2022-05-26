@@ -1,0 +1,6 @@
+(library
+ (public_name ppx_deriving_optic)
+ (preprocess
+  (pps ppxlib.metaquot))
+ (libraries ppx_tools ppx_deriving.api)
+ (kind ppx_deriver))

@@ -1,0 +1,567 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Unicorn playground</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="codemirror/codemirror-5.58.2/lib/codemirror.css">
+
+<style>
+@import url(https://cdn.jsdelivr.net/gh/tonsky/FiraCode@4/distr/fira_code.css);
+
+#errors {
+  font-weight: bold;
+  color: #BF3838;
+  background: #FFB2B2;
+  font-size: 1.1em;
+}
+
+#output {
+  font-family: monospace, monospace;
+  margin: 1em 0;
+}
+
+#unicorn {
+  margin: 1em 0;
+}
+
+#unicorn .test {
+  border: 2px solid black;
+  background: white;
+  padding: 1em;
+  margin: 0.5em 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  padding: 0;
+}
+
+
+body {
+  font-family: 'Fira Sans', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.CodeMirror * {
+  font-family: 'Fira Code', monospace;
+}
+
+.CodeMirror {
+  height: auto;
+  line-height: 1.3rem;
+}
+
+.ide {
+  display: flex;
+  height: 100vh;
+}
+
+#toplevel-container {
+  overflow: scroll;
+  width: 100%;
+  height: 100vh;
+}
+
+.result {
+  background: #eee;
+  width: 100%;
+  padding: 1%;
+  overflow: scroll;
+}
+
+.run {
+  display: block;
+  position: -webkit-sticky;
+  position: sticky;
+}
+</style>
+
+  </head>
+  <body>
+
+    <div class="ide">
+      <div id="toplevel-container">
+        <div>
+          <div id="sharp" class="sharp"></div>
+<textarea id="userinput" rows="5">
+open Optic
+open Unicorn_jsoo
+
+(* You can edit this buffer and click the RUN button at the top
+   to see the results. *)
+
+let intro =
+  H.h1 (str "Hello &#x1F984;")
+  &amp; H.p ( str "This is a quick demo of Unicorn, "
+        &amp; str "a library to define GUI applications.")
+  &amp; H.ul (
+      H.li (str "The module H contains the HTML elements like div, span, p, ul, li, etc. ")
+    &amp; H.li (str "The `str` function lifts an OCaml string as an HTML text element.")
+    &amp; H.li (str "Most importantly, we use the &amp; combinator to concatenate multiple HTML elements together.")
+  )
+
+let () = run intro ()
+
+(* The [run] function is our main loop: it displays the widget [intro].
+
+   Its second argument here is the unit value () because we are not yet
+   interactive. In the next examples, this parameter will be the initial
+   state of our application.
+
+   Normally, you would have only one call to [run] in your application!
+   ... but for the playground, it's convenient to do it in multiple steps.
+
+   Unicorn is focused on a small set of algebraic combinators that each
+   help to construct complex GUIs. The first of those is ( &amp; ) to display
+   multiple elements side by side.
+   It's associative so you can drop the parens:
+
+      a &amp; (b &amp; c)  =  a &amp; b &amp; c  =  (a &amp; b) &amp; c
+
+   It is NOT commutative since [a &amp; b] and [b &amp; a] displays the
+   widgets in a different order.
+
+   There's also an [empty] widget that's invisible and perfectly useless!
+   It acts as the identity for our associative operator:
+
+      w &amp; empty  =  w  =  empty &amp; w     forall widget [w]
+
+   Unicorn likes to define how its functions work together with equations.
+   For example, what happens if we use two [str] and a [&amp;] ?
+
+      str x &amp; str y  =  str (x ^ y)
+
+   It means that we can always simplify/rewrite/refactor if we follow
+   its rules, with confidence that the outcome will be exactly the same.
+
+   The initial example is very static, so let's introduce an HTML widget
+   to edit a string:
+
+       val input_string : string t
+
+   The type ['a t] is the type of widgets capable of rendering and editing
+   a value of type ['a].  For this "text editor" widget, the ['a] is
+   naturally a [string].
+   As another example, the checkbox can edit a boolean:
+
+       val checkbox : bool t
+
+   And a variation on [input_string] allow us to edit integers as text:
+
+       val input_int : int t
+*)
+
+let first_input =
+  H.h2 (str "My first widget:")
+  &amp; input_string
+
+let () = run first_input "hi"
+
+(* This time the state of our application is the string "hi",
+   which the [input_string] is able to update.
+
+   Try to replace the [input_string] with a [checkbox]! You will also
+   need to change the second argument of the [run] function, as it
+   has the type:
+
+       val run : 'a t -&gt; 'a -&gt; unit
+
+   While you can interact with this widget on the right... you may not be
+   convinced that it's really doing anything more than what the browser
+   provides!  A variation on the [str] function will help to visualize
+   the state of our application:
+
+      val text : ('a -&gt; string) -&gt; 'a t
+
+   This also displays an OCaml string, but it is dynamically updated
+   everytime the ['a] state changes. We of course have the laws:
+
+                str s  =  text (fun _ -&gt; s)
+      text f &amp; text g  =  text (fun x -&gt; f x ^ g x)
+*)
+
+let yelling_input =
+  H.h2 (str "A yelling widget:")
+  &amp; input_string
+  &amp; str " and in capslock: "
+  &amp; text (fun str -&gt; String.uppercase_ascii str)
+
+let () = run yelling_input "what"
+
+(* It works the same for other type of widgets and we get builtin reactivity: *)
+
+let second_test =
+    checkbox
+  &amp; checkbox
+  &amp; checkbox
+  &amp; text (fun b -&gt; if b then " It's &#x2728; ON " else " It's &#x1F480; OFF ")
+  &amp; checkbox
+  &amp; checkbox
+  &amp; checkbox
+
+let () = run second_test true
+
+(* You can try to use multiple [input_string] to see that all
+   the strings are kept in sync.
+
+   We can also create HTML buttons with the syntax:
+
+      button (str "Click me" &amp; E.click (fun old_state -&gt; new_state))
+
+   The module [E] stands for events. The [click] event takes
+   a callback that is called when the button is clicked in order
+   to transform the [old_state] into the [new_state]. *)
+
+let counter =
+  input_int
+  &amp; button (str "+1" &amp; E.click (fun x -&gt; x + 1))
+  &amp; button (str "-1" &amp; E.click (fun x -&gt; x - 1))
+
+let () = run counter 42
+
+(* In order to create widgets for more complex datatypes like a record,
+   we use the [on] combinator. It takes a [lens] corresponding
+   to a field of the record that we want to edit.
+
+      val on : ('a, 'b) lens -&gt; 'b t -&gt; 'a t
+
+   You can automatically derive those "lenses" from a type definition: *)
+
+type user = { name : string ; age : int } [@@deriving optic, show]
+  (* automatically adds a [name] and [age] lens! *)
+
+let user_editor =
+    H.div ( str "Your name: " &amp; on name input_string )
+  &amp; H.div ( str "Your age: "  &amp; on age counter )
+  &amp; H.pre ( text show_user )
+
+let () = run user_editor { name = "OCaml" ; age = 25 }
+
+(* The syntax [on lens widget] uses the [widget] on the field [lens].
+   The [on] combinator is distributive on [&amp;]:
+
+      on lens (a &amp; b)  =  on lens a &amp; on lens b
+
+   And you can also collapse a sequence of [on] by composing the lenses:
+
+      on f (on g w)  = on (Lens.compose f g) w
+
+   As another example, we can use lenses to define the product of two widgets:
+*)
+
+let ( &lt;*&gt; ) : 'a t -&gt; 'b t -&gt; ('a * 'b) t
+= fun a b -&gt; on Lens.fst a &amp; on Lens.snd b
+
+let () = run (checkbox &lt;*&gt; input_string) (false, "product")
+
+(* For sum types, the corresponding combinator is [into] and the dual
+   of lenses is called a "prism".
+
+      val into : ('a, 'b) prism -&gt; 'b t -&gt; 'a t
+
+   They are also automatically defined by the optic ppx: *)
+
+type any_user = Anonymous | User of user [@@deriving optic]
+
+let any_user_editor =
+    into anonymous (str " I don't know who you are! ")
+  &amp; into user user_editor
+
+(* The [into case widget] is like pattern matching on the
+   different constructors. Its laws are very similar to [on].
+   Let's add a button to toggle between the two possibilities: *)
+
+let any_user_test =
+    button ( str "Toggle"
+           &amp; E.click (function
+                      | Anonymous -&gt; User { name = "" ; age = 0 }
+                      | User _ -&gt; Anonymous))
+  &amp; H.div any_user_editor
+
+let () = run any_user_test Anonymous
+
+(* You can use [into] to recursively traverse a datatype like a list.
+   There's a tiny issue with OCaml strict evaluation, so we have to
+   use lazyness to help:
+
+      val of_lazy : 'a t Lazy.t -&gt; 'a t
+
+   such that [of_lazy (lazy w) = w] but without the non-terminating issue.
+*)
+
+let list w =
+  let rec recursive =
+    lazy (
+        into Prism.nil empty
+      &amp; into Prism.cons (H.li w &lt;*&gt; of_lazy recursive)
+    )
+  in
+  H.ul (Lazy.force recursive)
+
+let list_editor =
+  H.h2 (str "List editor:")
+  &amp; button (str "Add" &amp; E.click (fun xs -&gt; "New item description" :: xs))
+  &amp; list input_string (* &lt;-- *)
+  &amp; H.pre (text (String.concat " ; "))
+
+let () = run list_editor [ "first" ; "second" ]
+
+(* We can even use the laws to simplify the definition of [list]:
+
+      into prism empty  =  empty
+        empty &amp; widget  =  widget
+
+   so we can remove the useless [into Prism.nil empty]:
+*)
+let list w =
+  let rec lst = lazy (into Prism.cons (w &lt;*&gt; of_lazy lst)) in
+  Lazy.force lst
+
+let list w = H.ul (list (H.li w)) (* and factor out the HTML *)
+
+(* At some point when building complex application, you are going to need to
+   encapsulate the internal complexity of your custom widgets.
+   Even the basic [input_string] does this: it has to maintain the
+   position of the text cursor in order to do its job, but it doesn't
+   leak this "internal" state out (as it would be very inconvenient
+   otherwise!)
+
+   Unicorn has a combinator to do this for your own widgets:
+
+      val stateful : 's -&gt; ('s * 'a) t -&gt; 'a t
+
+   You just have to provide an initial value ['s] for the internal state,
+   but it's totally hidden from the outside.
+
+   Here we "hide" a boolean state that toggles the internal behavior:
+*)
+
+let yell_or_quiet =
+  stateful true (
+    (checkbox &lt;*&gt; input_string)
+  &amp; text (fun (yell, str) -&gt;
+                if yell
+                then " &#x1F56C; " ^ String.uppercase_ascii str
+                else " &#x1F92B; " ^ String.lowercase_ascii str)
+  )
+
+let () = run yell_or_quiet "hElLo wOrLd"
+
+(* The laws governing [stateful] roughly states that internal state can
+   always bubble out. The exact equations are a mouthful, but you can
+   skip them for the moment: they are not doing anything surprising
+   [stateful] commutes with [on]/[into], we can collapse two [stateful]
+   into a single one, etc (see the documentation.)
+
+   As a more interesting example, we can use [stateful] to create a
+   simple todolist. The internal state is the next TODO to be inserted,
+   while our application state is just the committed todo items list.
+
+   (But note that we can completly do this without [stateful] if we prefer!)
+*)
+
+let add_todo_btn =
+  H.div (
+    stateful "My Next Todo Item" (
+      on Lens.fst input_string
+    &amp; button (str "Add todo" &amp; E.click (fun (x, xs) -&gt; "", (false, x) :: xs))
+    )
+  )
+
+let todolist =
+  H.h2 (str "Todolist:")
+  &amp; add_todo_btn
+  &amp; list (checkbox &lt;*&gt; input_string)
+  &amp; H.p (text (fun xs -&gt;
+                 Printf.sprintf "%i / %i todos"
+                   (List.length (List.filter (fun (x, _) -&gt; x) xs))
+                   (List.length xs)))
+
+let () = run todolist [ (false, "wip") ; (true, "done") ]
+
+(* What's interesting about internal state is that it isn't shared.
+   The following two [todolist] widgets are editing the same list,
+   but their internal state is separate: *)
+
+let double_todolist =
+  H.div (
+    A.style (fun _ -&gt; "display: flex; justify-content: space-between")
+  &amp; H.div todolist
+  &amp; H.div todolist
+  )
+
+let () = run double_todolist [ (false, "wip") ; (true, "done") ]
+
+(* Here is a much more complex example demonstrating that we can have
+   internal state in recursive widgets: The tree editor can show/hide
+   the children of each node with a checkbox.
+
+   It's using a small variation of [into] called [cond], that only
+   displays a widget when its predicate is satisfied:
+
+      val cond : ('a -&gt; bool) -&gt; 'a t -&gt; 'a t
+
+   (Of course we have:
+
+      cond p (cond q w)  =  cond (fun x -&gt; p x &amp;&amp; q x) w
+
+   ... and a lot more laws!)
+*)
+
+type tree = Leaf of string | Node of tree * tree [@@deriving optic, show]
+
+let tree_editor =
+  let rec tree =
+    lazy (
+      H.ul (
+        H.li ( into leaf (str "Leaf &#x1F343; " &amp; input_string )
+             &amp; into node (of_lazy node_editor)
+        )
+      )
+    )
+  and node_editor =
+    lazy (
+      stateful true
+        ( on Lens.fst checkbox &amp; str "Node &#x1F384;"
+        &amp; cond (fun (show, _) -&gt; show)
+            (on Lens.snd (of_lazy tree &lt;*&gt; of_lazy tree))
+        )
+    )
+  in
+  H.h2 (str "Tree editor:")
+  &amp; Lazy.force tree
+  &amp; H.pre (text show_tree)
+
+let () = run tree_editor (Node (Node (Leaf "a", Leaf "b"),
+                                Node (Leaf "c", Node (Leaf "d", Leaf "e"))))
+
+(* But while internal state is super convenient, it also introduces some
+   deeper issues. Two identical widgets are not really the same anymore
+   as soon as their internal state starts to diverge.
+
+   Suppose we have two different todolists side by side and we want
+   a button to swap their position: *)
+
+let double_with_swap =
+  H.h2 ( str "Double todolist and we can try to "
+       &amp; button (str "Swap!" &amp; E.click (fun (x, y) -&gt; y, x)))
+  &amp; H.div (
+      A.style (fun _ -&gt; "display: flex; justify-content: space-between")
+    &amp; (H.div todolist &lt;*&gt; H.div todolist)
+  )
+
+let () = run double_with_swap ([false, "left"], [true, "right"])
+
+(* It seems to work, but their internal states are NOT swapped! We are
+   only able to swap their lists, not the text of their next todo item to
+   be inserted.
+
+   So finally, we come to the very last combinator provided by Unicorn
+   for when we want control on our widgets "positions":
+
+      val dynamic : ('a t * 'a) t
+
+   It's just a value, not even a function!... Its main law is:
+
+      stateful w dynamic  =  w
+
+   Meaning that it renders a widget dynamically as coming from the
+   application state.
+
+   We could use it as follow to swap the todolist **widgets** :
+*)
+
+let double_with_swap' =
+  H.h2 ( str "Double todolist with a real "
+       &amp; button (str "Swap!" &amp; E.click (fun (x, y) -&gt; y, x)))
+  &amp; H.div (
+      A.style (fun _ -&gt; "display: flex; justify-content: space-between")
+    &amp; (H.div dynamic &lt;*&gt; H.div dynamic)
+  )
+
+let () = run double_with_swap' ((todolist, [false, "left"]),
+                                (todolist, [true, "right"]))
+
+(* And now the widgets and their internal state really swap places!
+   The [dynamic] widget is extremely powerful and the solution to
+   most advanced widgets:
+
+   - You can move widgets around
+   - You can duplicate widgets and their internal states
+   - With dynamic collections, the pattern [list dynamic] works great.
+   - And a lot of crazy stuff, starting with [dynamic &amp; dynamic]
+
+   But this tutorial is already way too long to show off all of this!
+   Have fun!
+*)
+</textarea>
+        </div>
+      </div>
+
+      <div class="result">
+        <button id="run">Run</button>
+        <div id="unicorn"></div>
+        <div id="output"></div>
+        <pre id="errors"></pre>
+        <pre id="camlsig"></pre>
+      </div>
+    </div>
+
+<script src="codemirror/codemirror-5.58.2/lib/codemirror.js"></script>
+<script src="codemirror/codemirror-5.58.2/mode/mllike/mllike.js"></script>
+
+<script>
+
+
+var editor = CodeMirror.fromTextArea(document.getElementById('userinput'), {
+  mode: 'text/x-ocaml',
+  lineNumbers: true,
+  matchBrackets: true,
+});
+editor.on('change', function() {
+  document.getElementById('userinput').value = editor.getValue();
+});
+
+const markers = [];
+
+function clearHl() {
+  markers.forEach(function (marker) { marker.clear() });
+}
+
+function highlight(line0, col0, line1, col1) {
+  const options = {
+    css: 'background: rgba(255,0,0,0.3); font-weight: bold',
+    attributes: {title:'Hey'},
+  };
+  const from = { line: line0, ch: col0 };
+  const to = { line: line1, ch: col1 };
+  const mark = editor.markText(from, to, options);
+  markers.push(mark);
+}
+
+var camlsig = document.getElementById('camlsig');
+var camlsig_view = CodeMirror(camlsig, {
+  mode: 'text/x-ocaml',
+  readOnly: 'nocursor',
+});
+function logCaml(str) {
+  str = str.trim();
+  const current = camlsig_view.getValue();
+  str = current == '' ? str : '\n' + str ;
+  camlsig_view.setValue(current + str);
+}
+function resetCaml() {
+  clearHl();
+  camlsig_view.setValue('');
+}
+</script>
+
+<script src="../_build/default/playground/toplevel.js"></script>
+
+  </body>
+</html>

@@ -1,0 +1,50 @@
+(executable
+ (name toplevel)
+ (libraries
+  js_of_ocaml-compiler
+  js_of_ocaml-toplevel
+  js_of_ocaml-lwt
+  ppx_deriving
+  ppx_deriving.show
+  ppx_deriving_optic
+  unicorn_jsoo
+  optic)
+ (flags
+  (:standard -linkall))
+ (modes byte)
+ (modules enable_ppx toplevel)
+ (preprocess
+  (pps js_of_ocaml-ppx)))
+
+(rule
+ (targets export.txt)
+ (action
+  (run
+   jsoo_listunits
+   -o
+   %{targets}
+   stdlib
+   ppx_deriving.runtime
+   unicorn_jsoo
+   optic)))
+
+(rule
+ (targets toplevel.js)
+ (action
+  (run
+   %{bin:js_of_ocaml}
+   -I
+   .
+   --export
+   %{dep:export.txt}
+   --toplevel
+   --linkall
+   +toplevel.js
+   +dynlink.js
+   %{dep:toplevel.bc}
+   -o
+   %{targets})))
+
+(alias
+ (name default)
+ (deps toplevel.js index.html))
