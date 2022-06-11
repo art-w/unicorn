@@ -31,11 +31,12 @@ let run ?id w x =
     let (x, state, cache), latest = render (x, state, cache) in
     let instance = Dag.redraw ~parent ~instance ~old ~latest in
     let global_state = State (instance, latest, x, state, cache, render) in
-    instance.parent <- Root (update global_state)
+    Event.set_root instance (update global_state)
   and update global_state () =
     let _ =
       Dom_html.window##requestAnimationFrame
-        (Js.wrap_callback (fun _t ->
+        (Js.wrap_callback (fun t ->
+             Html.E.set_current_time t ;
              let (State (instance, old, x, state, cache, render)) = global_state in
              let x, state = Event.recompute instance (x, state) in
              let global_state = State (instance, old, x, state, cache, render) in

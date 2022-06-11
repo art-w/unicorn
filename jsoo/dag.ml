@@ -5,14 +5,26 @@ type 'a s = 'a Type.s
 type 'a t = 'a Type.dag
 
 let collect_attributes : type a. a s -> Attr.t = function
-  | Empty | Text _ | Node _ | Event _ -> Attr.empty
+  | Empty | Text _ | Node _ | Event _ | Always _ -> Attr.empty
   | Seq (a, b) -> Attr.merge a.attributes b.attributes
   | On (_, _, t) -> t.attributes
   | Iso (_, _, t) -> t.attributes
   | Into (_, _, t) -> t.attributes
   | Dynamic (_, t) -> t.attributes
 
-let make s = { dirty = false; parent = No_parent; attributes = collect_attributes s; s }
+let child_is_dirty : type a. a s -> bool = function
+  | Always _ -> true
+  | Node (_, _, t) -> t.dirty
+  | On (_, _, t) -> t.dirty
+  | Iso (_, _, t) -> t.dirty
+  | Into (_, _, t) -> t.dirty
+  | Dynamic (_, t) -> t.dirty
+  | Seq (a, b) -> a.dirty || b.dirty
+  | _ -> false
+
+let make s =
+  { dirty = child_is_dirty s; parent = No_parent; attributes = collect_attributes s; s }
+
 let empty () = make Empty
 let text str = make (Text (None, str))
 let node name child = make (Node (None, name, child))
@@ -22,6 +34,7 @@ let on eq lens t = make (On (eq, lens, t))
 let into eq prism t = make (Into (eq, prism, t))
 let dynamic eq t = make (Dynamic (eq, t))
 let event eq typ fn = make (Event (eq, None, typ, ref None, fn))
+let always fn = make (Always fn)
 let attr key value = { (empty ()) with attributes = Attr.single key value }
 
 let attach : type a. a t -> a t =
@@ -30,6 +43,7 @@ let attach : type a. a t -> a t =
   | Empty -> ()
   | Text _ -> ()
   | Event _ -> ()
+  | Always _ -> ()
   | Node (_, _, child) -> child.parent <- Any t
   | Iso (_, _, child) -> child.parent <- Any t
   | On (_, _, child) -> child.parent <- Any t
@@ -40,7 +54,8 @@ let attach : type a. a t -> a t =
     b.parent <- Any t) ;
   t
 
-let create ~attributes s = attach { dirty = false; parent = No_parent; attributes; s }
+let create ~attributes s =
+  attach { dirty = child_is_dirty s; parent = No_parent; attributes; s }
 
 let rec delete : type a. parent:elt -> a t -> unit =
  fun ~parent t ->
@@ -57,6 +72,7 @@ let rec delete : type a. parent:elt -> a t -> unit =
   | Dynamic (_, t) -> delete ~parent t
   | Event (_, Some eid, _, _, _) -> Dom_html.removeEventListener eid
   | Event (_, None, _, _, _) -> () (* ?? *)
+  | Always _ -> ()
   | Node (Some elt, _, _) -> ignore (parent##removeChild (elt :> node))
   | Node (None, _, _) -> failwith "delete node: should have an instance"
 
@@ -120,6 +136,9 @@ let rec instantiate
     let self = create ~attributes (Event (eq, Some eid, typ, latest_event, handler)) in
     target := Any self ;
     attach self, previous
+  | Always fn ->
+    let self = create ~attributes (Always fn) in
+    attach self, previous
 
 let rec first : type a. previous:node option -> a t -> node option =
  fun ~previous t ->
@@ -156,6 +175,8 @@ let rec reuse
     in
     match instance.s, old.s, latest.s with
     | Empty, Empty, Empty -> instance, first ~previous instance
+    | Always _, Always _, Always _ ->
+      { instance with dirty = true }, first ~previous instance
     | Text (Some txt, _), Text (_, old_str), Text (_, new_str) ->
       if not (String.equal old_str new_str) then txt##.data := Js.string new_str ;
       instance, first ~previous instance

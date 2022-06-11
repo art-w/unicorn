@@ -253,6 +253,14 @@ module E : sig
       - [∀ i f. iso i (click f) == click (Iso.map i f)] and same for lenses and prisms
   *)
 
+  (** {2 Animations} *)
+
+  val now : (float -> 'a -> 'a) -> 'a t
+  (** [now fn] invokes the callback [fn] on every frame with the current time and state. *)
+
+  val dt : (float -> 'a -> 'a) -> 'a t
+  (** [dt fn] invokes the callback [fn] on every frame with the delta time and state. *)
+
   (** {2 Unsafe}
       Consider submitting a PR if you find yourself using this!
   *)

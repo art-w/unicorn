@@ -94,6 +94,27 @@ module E = struct
   let click fn = make Dom_html.Event.click (fun _ -> fn)
   let change fn = make Dom_html.Event.change fn
   let input fn = make Dom_html.Event.input fn
+  let delta_time = ref 0.0
+  let current_time = ref nan
+
+  let set_current_time t =
+    (delta_time
+       := match classify_float !current_time with
+          | FP_nan -> 0.0
+          | _ -> t -. !current_time) ;
+    current_time := t
+
+  let always fn =
+    W
+      ( ()
+      , ()
+      , Eq.unit
+      , fun input ->
+          let img = Dag.always (fun (x, ()) -> fn x, ()) in
+          input, img )
+
+  let now fn = always (fun x -> fn !current_time x)
+  let dt fn = always (fun x -> fn !delta_time x)
 end
 
 let button = H.button

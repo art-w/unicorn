@@ -73,4 +73,7 @@ let rec recompute : type a s. (a * s) dag -> a * s -> a * s =
       | None -> failwith "no event?"
       | Some ev ->
         latest_event := None ;
-        handler ev input))
+        handler ev input)
+    | Always handler -> handler input)
+
+let set_root ev fn = if ev.dirty then fn () else ev.parent <- Root fn
