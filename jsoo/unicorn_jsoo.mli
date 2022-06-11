@@ -226,6 +226,7 @@ module A : sig
   val class_ : ('a -> string) -> 'a t
   val style : ('a -> string) -> 'a t
   val disabled : ('a -> bool) -> 'a t
+  val tabindex : ('a -> int) -> 'a t
 
   (** {2 Unsafe}
       Consider submitting a PR if you find yourself using this!
@@ -233,6 +234,9 @@ module A : sig
 
   val make_string : string -> ('a -> string) -> 'a t
   (** [make_string attr value] attaches an attribute/property to its HTML parent node. *)
+
+  val make_int : string -> ('a -> int) -> 'a t
+  (** [make_int attr value] attaches an integer attribute/property to its HTML parent node. *)
 
   val make_bool : string -> ('a -> bool) -> 'a t
   (** [make_string attr value] attaches a boolean attribute/property to its HTML parent node. *)
@@ -252,6 +256,8 @@ module E : sig
       - [∀ f g. click f & click g == click (fun x -> g (f x))]
       - [∀ i f. iso i (click f) == click (Iso.map i f)] and same for lenses and prisms
   *)
+
+  val keydown : (int -> 'a -> 'a) -> 'a t
 
   (** {2 Animations} *)
 

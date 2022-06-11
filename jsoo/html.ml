@@ -68,12 +68,14 @@ module A = struct
 
   let make_bool key show = make key (fun x -> Attr.Bool (show x))
   let make_string key show = make key (fun x -> Attr.String (show x))
+  let make_int key show = make_string key (fun x -> string_of_int (show x))
   let value fn = make_string "value" fn
   let type_ fn = make_string "type" fn
   let class_ fn = make_string "class" fn
   let style fn = make_string "style" fn
   let checked fn = make_bool "checked" fn
   let disabled fn = make_bool "disabled" fn
+  let tabindex fn = make_int "tabindex" fn
 end
 
 module E = struct
@@ -94,6 +96,7 @@ module E = struct
   let click fn = make Dom_html.Event.click (fun _ -> fn)
   let change fn = make Dom_html.Event.change fn
   let input fn = make Dom_html.Event.input fn
+  let keydown fn = make Dom_html.Event.keydown (fun ev x -> fn ev##.keyCode x)
   let delta_time = ref 0.0
   let current_time = ref nan
 
