@@ -1,0 +1,5 @@
+(executable
+ (name game_2048)
+ (modules game_2048)
+ (modes js)
+ (libraries unicorn_jsoo))
