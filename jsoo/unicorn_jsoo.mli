@@ -64,9 +64,16 @@ val into : ('a, 'b) prism -> 'b t -> 'a t
 (** [into prism w] pattern matches the state ['a] with the [prism], to render
     the widget [w]. If the prism fails, then it renders [empty].
 
-    - identities: [into prism empty == empty] and [∀ w. into Prism.id w == w]
-    - composition: [into p1 (on p2 w) == into (Prism.compose p1 p2) w]
-    - distributive: [into prism a & into prism b == into prism (a & b)]
+    - identities: [∀ prism. into prism empty == empty] and [∀ w. into Prism.id w == w]
+    - composition: [∀ p1 p2 w. into p1 (on p2 w) == into (Prism.compose p1 p2) w]
+    - distributive: [∀ prism a b. into prism a & into prism b == into prism (a & b)]
+*)
+
+val case : ('a, 'b) prism -> 'b t -> 'a t
+(** [case prism w] is the same as [into prism w], but the internal state of
+    the widget [w] is reset when the prism is not satisfied.
+
+    - definition: [∀ p w. into p w == stateful w (case Prism.(product id p) dynamic)]
 *)
 
 val stateful : 's -> ('s * 'a) t -> 'a t
@@ -116,6 +123,10 @@ val cond : ('a -> bool) -> 'a t -> 'a t
 val ifte : ('a -> bool) -> 'a t -> 'a t -> 'a t
 (** [ifte p if_true if_false] renders the widget [if_true] when [p] is satisfied,
     otherwise [if_false]. *)
+
+val cond_forget : ('a -> bool) -> 'a t -> 'a t
+(** Same as [cond], but the internal state is lost when the predicate
+    is unsatisfied (see {!case}). *)
 
 val stateful_by : ('a -> 's) -> ('s * 'a) t -> 'a t
 (** [stateful_by f w] is the same as [stateful], but the initial value is computed

@@ -59,6 +59,28 @@ let on lens (W (c, s, _, w)) =
           let cache = Some (x, s, img) in
           (x, s, (cache, c)), img )
 
+let case prism (W (c, s0, _, w)) =
+  let eq_prism = Eq.create () in
+  W
+    ( (None, c)
+    , s0
+    , Eq.create ()
+    , fun ((x, s, (cache, c)) as input) ->
+        match cache with
+        | Some (x', s', img) when x == x' && s == s' -> input, img
+        | _ ->
+          (match Optic.Prism.extract prism x with
+          | None ->
+            let img = Dag.empty () in
+            let cache = Some (x, s, img) in
+            (x, s0, (cache, c)), img
+          | Some y ->
+            let (y, s, c), img = w (y, s, c) in
+            let x = Optic.Prism.make prism y in
+            let img = Dag.into eq_prism prism img in
+            let cache = Some (x, s, img) in
+            (x, s, (cache, c)), img) )
+
 let into prism (W (c, s, _, w)) =
   let eq_prism = Eq.create () in
   W
@@ -82,6 +104,7 @@ let into prism (W (c, s, _, w)) =
             (x, s, (cache, c)), img) )
 
 let cond predicate w = into (Prism.satisfy predicate) w
+let cond_forget predicate w = case (Prism.satisfy predicate) w
 
 let ifte predicate if_true if_false =
   cond predicate if_true & cond (fun x -> not (predicate x)) if_false
