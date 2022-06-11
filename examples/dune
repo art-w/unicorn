@@ -3,3 +3,11 @@
  (modules game_2048)
  (modes js)
  (libraries unicorn_jsoo))
+
+(executable
+ (name todomvc)
+ (modules todomvc)
+ (modes js)
+ (libraries unicorn_jsoo)
+ (preprocess
+  (pps ppx_deriving_optic)))

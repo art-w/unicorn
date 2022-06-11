@@ -16,8 +16,8 @@ let rec undirty : type a. a dag -> unit =
     | Node (_, _, child) -> undirty child
     | _ -> ())
 
-let rec recompute : type a s. (a * s) dag -> a * s -> a * s =
- fun t input ->
+let rec recompute : type a s. parent:elt -> (a * s) dag -> a * s -> a * s =
+ fun ~parent t input ->
   if not t.dirty
   then input
   else (
@@ -25,20 +25,21 @@ let rec recompute : type a s. (a * s) dag -> a * s -> a * s =
     match t.s with
     | Empty -> failwith "recompute empty"
     | Text _ -> failwith "recompute text"
-    | Node (_, _, child) -> recompute child input
+    | Node (None, _, _) -> failwith "recompute node"
+    | Node (Some parent, _, child) -> recompute ~parent child input
     | Seq (a, b) ->
       let x, (s0, s1) = input in
-      let x, s0 = recompute a (x, s0) in
-      let x, s1 = recompute b (x, s1) in
+      let x, s0 = recompute ~parent a (x, s0) in
+      let x, s1 = recompute ~parent b (x, s1) in
       x, (s0, s1)
     | Iso (_, iso, child) ->
       let out = Optic.Iso.ltor iso input in
-      let out = recompute child out in
+      let out = recompute ~parent child out in
       Optic.Iso.rtol iso out
     | On (_, lens, child) ->
       let x, s = input in
       let y = Optic.Lens.get lens x in
-      let y, s = recompute child (y, s) in
+      let y, s = recompute ~parent child (y, s) in
       Optic.Lens.put lens y x, s
     | Into (_, prism, child) ->
       let x, s = input in
@@ -47,7 +48,7 @@ let rec recompute : type a s. (a * s) dag -> a * s -> a * s =
         undirty child ;
         input
       | Some y ->
-        let y, s = recompute child (y, s) in
+        let y, s = recompute ~parent child (y, s) in
         Optic.Prism.make prism y, s)
     | Dynamic (eq, child) ->
       let (W (c, s', seq', w), x), () = input in
@@ -63,7 +64,7 @@ let rec recompute : type a s. (a * s) dag -> a * s -> a * s =
           , (child : (x * s) dag) ) ->
         (match Eq.check eq seq' with
         | Some (Refl : (s2, s) Eq.eq) ->
-          let x, s = recompute child (x, s') in
+          let x, s = recompute ~parent child (x, s') in
           (W (c, s, seq', w), x), ()
         | None ->
           undirty child ;
@@ -74,6 +75,6 @@ let rec recompute : type a s. (a * s) dag -> a * s -> a * s =
       | Some ev ->
         latest_event := None ;
         handler ev input)
-    | Always handler -> handler input)
+    | Always handler -> handler parent input)
 
 let set_root ev fn = if ev.dirty then fn () else ev.parent <- Root fn

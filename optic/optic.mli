@@ -57,6 +57,8 @@ module Prism : sig
   val make : ('a, 'b) prism -> 'b -> 'a
   val map : ('a, 'b) prism -> ('b -> 'b) -> 'a -> 'a
   val compose : ('a, 'b) prism -> ('b, 'c) prism -> ('a, 'c) prism
+  val product : ('a, 'b) prism -> ('c, 'd) prism -> ('a * 'c, 'b * 'd) prism
+  val id : ('a, 'a) prism
   val satisfy : ('a -> bool) -> ('a, 'a) prism
   val is : 'a -> ('a, 'a) prism
   val none : ('a option, unit) prism

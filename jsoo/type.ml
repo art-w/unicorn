@@ -41,7 +41,7 @@ type 'a s =
       * 'e option ref
       * ('e -> 'a -> 'a)
       -> 'a s
-  | Always : ('a -> 'a) -> 'a s
+  | Always : (elt -> 'a -> 'a) -> 'a s
 
 and dag_parent =
   | No_parent

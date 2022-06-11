@@ -186,12 +186,8 @@ module H : sig
       children, then they must only be passed attributes (and not children nodes).
    *)
 
+  val a : 'a t -> 'a t
   val div : 'a t -> 'a t
-  val span : 'a t -> 'a t
-  val p : 'a t -> 'a t
-  val ul : 'a t -> 'a t
-  val li : 'a t -> 'a t
-  val pre : 'a t -> 'a t
   val h1 : 'a t -> 'a t
   val h2 : 'a t -> 'a t
   val h3 : 'a t -> 'a t
@@ -199,6 +195,18 @@ module H : sig
   val h5 : 'a t -> 'a t
   val h6 : 'a t -> 'a t
   val hr : 'a t list -> 'a t
+  val label : 'a t -> 'a t
+  val li : 'a t -> 'a t
+  val p : 'a t -> 'a t
+  val pre : 'a t -> 'a t
+  val span : 'a t -> 'a t
+  val ul : 'a t -> 'a t
+  val section : 'a t -> 'a t
+  val header : 'a t -> 'a t
+  val footer : 'a t -> 'a t
+  val button : 'a t -> 'a t
+  val input_string : ('a, string) lens -> 'a t list -> 'a t
+  val checkbox : ('a, bool) lens -> 'a t list -> 'a t
 
   (** {2 Unsafe}
       Consider submitting a PR if you find yourself using this!
@@ -223,10 +231,14 @@ module A : sig
       will produce the HTML [<div class="foo">...</div>]
   *)
 
+  val id : ('a -> string) -> 'a t
   val class_ : ('a -> string) -> 'a t
   val style : ('a -> string) -> 'a t
+  val for_ : ('a -> string) -> 'a t
   val disabled : ('a -> bool) -> 'a t
   val tabindex : ('a -> int) -> 'a t
+  val placeholder : ('a -> string) -> 'a t
+  val autofocus : ('a -> bool) -> 'a t
 
   (** {2 Unsafe}
       Consider submitting a PR if you find yourself using this!
@@ -257,7 +269,17 @@ module E : sig
       - [∀ i f. iso i (click f) == click (Iso.map i f)] and same for lenses and prisms
   *)
 
+  val doubleclick : ('a -> 'a) -> 'a t
   val keydown : (int -> 'a -> 'a) -> 'a t
+  val blur : ('a -> 'a) -> 'a t
+
+  (** {2 Lifecycle} *)
+
+  val init : (Js_of_ocaml.Dom_html.element Js_of_ocaml.Js.t -> 'a -> 'a) -> 'a t
+  (** [init fn] calls [fn] once on the creation of the HTML widget. *)
+
+  val init_focus : unit -> 'a t
+  (** [init_focus ()] focuses the HTML parent element on creation. *)
 
   (** {2 Animations} *)
 

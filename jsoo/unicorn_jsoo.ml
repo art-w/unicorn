@@ -38,7 +38,7 @@ let run ?id w x =
         (Js.wrap_callback (fun t ->
              Html.E.set_current_time t ;
              let (State (instance, old, x, state, cache, render)) = global_state in
-             let x, state = Event.recompute instance (x, state) in
+             let x, state = Event.recompute ~parent instance (x, state) in
              let global_state = State (instance, old, x, state, cache, render) in
              rerender global_state))
     in

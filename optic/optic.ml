@@ -79,9 +79,20 @@ module Prism = struct
     | None -> x
     | Some y -> t.make (f y)
 
+  let id = { extract = (fun x -> Some x); make = (fun x -> x) }
+
   let compose ab bc =
     { extract = (fun a -> Option.bind (ab.extract a) bc.extract)
     ; make = (fun c -> ab.make (bc.make c))
+    }
+
+  let product ab cd =
+    { extract =
+        (fun (a, c) ->
+          match ab.extract a, cd.extract c with
+          | Some b, Some d -> Some (b, d)
+          | _ -> None)
+    ; make = (fun (b, d) -> ab.make b, cd.make d)
     }
 
   let satisfy predicate =
