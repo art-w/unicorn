@@ -10,8 +10,8 @@ bug-reports: "https://github.com/art-w/unicorn/issues"
 depends: [
   "dune" {>= "2.8"}
   "ocaml" {>= "4.08"}
-  "ppxlib"
-  "ppx_deriving"
+  "ppxlib" {>= "0.35.0"}
+  "ppx_deriving" {>= "6.0.0"}
   "odoc" {with-doc}
 ]
 build: [

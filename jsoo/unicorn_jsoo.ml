@@ -36,11 +36,12 @@ let run ?id w x =
     let _ =
       Dom_html.window##requestAnimationFrame
         (Js.wrap_callback (fun t ->
-             Html.E.set_current_time t ;
-             let (State (instance, old, x, state, cache, render)) = global_state in
-             let x, state = Event.recompute ~parent instance (x, state) in
-             let global_state = State (instance, old, x, state, cache, render) in
-             rerender global_state))
+           let t = Js.to_float t in
+           Html.E.set_current_time t ;
+           let (State (instance, old, x, state, cache, render)) = global_state in
+           let x, state = Event.recompute ~parent instance (x, state) in
+           let global_state = State (instance, old, x, state, cache, render) in
+           rerender global_state))
     in
     ()
   in
