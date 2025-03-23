@@ -103,8 +103,8 @@ module Prism = struct
   let none =
     { extract =
         (function
-        | None -> Some ()
-        | _ -> None)
+          | None -> Some ()
+          | _ -> None)
     ; make = (fun () -> None)
     }
 
@@ -113,16 +113,16 @@ module Prism = struct
   let nil =
     { extract =
         (function
-        | [] -> Some ()
-        | _ -> None)
+          | [] -> Some ()
+          | _ -> None)
     ; make = (fun () -> [])
     }
 
   let cons =
     { extract =
         (function
-        | x :: xs -> Some (x, xs)
-        | [] -> None)
+          | x :: xs -> Some (x, xs)
+          | [] -> None)
     ; make = (fun (x, xs) -> x :: xs)
     }
 end

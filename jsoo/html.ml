@@ -75,7 +75,7 @@ module E = struct
 
   let set_current_time t =
     delta_time
-      := if classify_float !current_time = FP_nan then 0.0 else t -. !current_time ;
+    := if classify_float !current_time = FP_nan then 0.0 else t -. !current_time ;
     current_time := t
 
   let always fn =
@@ -92,8 +92,8 @@ module E = struct
 
   let init_focus () =
     init (fun elt t ->
-        elt##focus ;
-        t)
+      elt##focus ;
+      t)
 
   let now fn = always (fun _ x -> fn !current_time x)
   let dt fn = always (fun _ x -> fn !delta_time x)
@@ -139,32 +139,32 @@ module H = struct
   let checkbox lens children =
     input
       (A.type_ (fun _ -> "checkbox")
-      & E.input (fun ev x ->
-            Js.Opt.case
-              ev##.target
-              (fun () -> failwith "event without a target?")
-              (fun t ->
-                Js.Opt.case
-                  (Dom_html.CoerceTo.input t)
-                  (fun () -> failwith "not an input?")
-                  (fun t -> Optic.Lens.put lens (Js.to_bool t##.checked) x)))
-      & A.checked (Optic.Lens.get lens)
-      & of_list children)
+       & E.input (fun ev x ->
+         Js.Opt.case
+           ev##.target
+           (fun () -> failwith "event without a target?")
+           (fun t ->
+              Js.Opt.case
+                (Dom_html.CoerceTo.input t)
+                (fun () -> failwith "not an input?")
+                (fun t -> Optic.Lens.put lens (Js.to_bool t##.checked) x)))
+       & A.checked (Optic.Lens.get lens)
+       & of_list children)
 
   let input_string lens children =
     input
       (A.type_ (fun _ -> "text")
-      & A.value (Optic.Lens.get lens)
-      & E.input (fun ev x ->
-            Js.Opt.case
-              ev##.target
-              (fun () -> failwith "event without a target?")
-              (fun t ->
-                Js.Opt.case
-                  (Dom_html.CoerceTo.input t)
-                  (fun () -> failwith "not an input?")
-                  (fun t -> Optic.Lens.put lens (Js.to_string t##.value) x)))
-      & of_list children)
+       & A.value (Optic.Lens.get lens)
+       & E.input (fun ev x ->
+         Js.Opt.case
+           ev##.target
+           (fun () -> failwith "event without a target?")
+           (fun t ->
+              Js.Opt.case
+                (Dom_html.CoerceTo.input t)
+                (fun () -> failwith "not an input?")
+                (fun t -> Optic.Lens.put lens (Js.to_string t##.value) x)))
+       & of_list children)
 end
 
 let button = H.button
@@ -178,7 +178,7 @@ let digits str =
   @@ List.rev
   @@ String.fold_left
        (fun acc chr ->
-         if (chr >= '0' && chr <= '9') || chr = '-' then chr :: acc else acc)
+          if (chr >= '0' && chr <= '9') || chr = '-' then chr :: acc else acc)
        []
        str
 

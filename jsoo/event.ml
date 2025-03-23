@@ -1,7 +1,7 @@
 open Type
 
 let rec undirty : type a. a dag -> unit =
- fun t ->
+  fun t ->
   if not t.dirty
   then ()
   else (
@@ -17,7 +17,7 @@ let rec undirty : type a. a dag -> unit =
     | _ -> ())
 
 let rec recompute : type a s. parent:elt -> (a * s) dag -> a * s -> a * s =
- fun ~parent t input ->
+  fun ~parent t input ->
   if not t.dirty
   then input
   else (
@@ -44,37 +44,36 @@ let rec recompute : type a s. parent:elt -> (a * s) dag -> a * s -> a * s =
     | Into (_, prism, child) ->
       let x, s = input in
       (match Optic.Prism.extract prism x with
-      | None ->
-        undirty child ;
-        input
-      | Some y ->
-        let y, s = recompute ~parent child (y, s) in
-        Optic.Prism.make prism y, s)
+       | None ->
+         undirty child ;
+         input
+       | Some y ->
+         let y, s = recompute ~parent child (y, s) in
+         Optic.Prism.make prism y, s)
     | Dynamic (eq, child) ->
       let (W (c, s', seq', w), x), () = input in
       (x, eq, s', seq', c, w, child)
-      |>
-      fun (type x s s2 c)
-          ( x
-          , (eq : s Eq.t)
-          , (s' : s2)
-          , (seq' : s2 Eq.t)
-          , (c : c)
-          , (w : (x, s2, c) render)
-          , (child : (x * s) dag) ) ->
-        (match Eq.check eq seq' with
-        | Some (Refl : (s2, s) Eq.eq) ->
-          let x, s = recompute ~parent child (x, s') in
-          (W (c, s, seq', w), x), ()
-        | None ->
-          undirty child ;
-          (W (c, s', seq', w), x), ())
+      |> fun (type x s s2 c)
+           ( x
+           , (eq : s Eq.t)
+           , (s' : s2)
+           , (seq' : s2 Eq.t)
+           , (c : c)
+           , (w : (x, s2, c) render)
+           , (child : (x * s) dag) ) ->
+      (match Eq.check eq seq' with
+       | Some (Refl : (s2, s) Eq.eq) ->
+         let x, s = recompute ~parent child (x, s') in
+         (W (c, s, seq', w), x), ()
+       | None ->
+         undirty child ;
+         (W (c, s', seq', w), x), ())
     | Event (_, _, _, latest_event, handler) ->
       (match !latest_event with
-      | None -> failwith "no event?"
-      | Some ev ->
-        latest_event := None ;
-        handler ev input)
+       | None -> failwith "no event?"
+       | Some ev ->
+         latest_event := None ;
+         handler ev input)
     | Always handler -> handler parent input)
 
 let set_root ev fn = if ev.dirty then fn () else ev.parent <- Root fn

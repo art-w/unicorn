@@ -70,16 +70,16 @@ let case prism (W (c, s0, _, w)) =
         | Some (x', s', img) when x == x' && s == s' -> input, img
         | _ ->
           (match Optic.Prism.extract prism x with
-          | None ->
-            let img = Dag.empty () in
-            let cache = Some (x, s, img) in
-            (x, s0, (cache, c)), img
-          | Some y ->
-            let (y, s, c), img = w (y, s, c) in
-            let x = Optic.Prism.make prism y in
-            let img = Dag.into eq_prism prism img in
-            let cache = Some (x, s, img) in
-            (x, s, (cache, c)), img) )
+           | None ->
+             let img = Dag.empty () in
+             let cache = Some (x, s, img) in
+             (x, s0, (cache, c)), img
+           | Some y ->
+             let (y, s, c), img = w (y, s, c) in
+             let x = Optic.Prism.make prism y in
+             let img = Dag.into eq_prism prism img in
+             let cache = Some (x, s, img) in
+             (x, s, (cache, c)), img) )
 
 let into prism (W (c, s, _, w)) =
   let eq_prism = Eq.create () in
@@ -92,16 +92,16 @@ let into prism (W (c, s, _, w)) =
         | Some (x', s', img) when x == x' && s == s' -> input, img
         | _ ->
           (match Optic.Prism.extract prism x with
-          | None ->
-            let img = Dag.empty () in
-            let cache = Some (x, s, img) in
-            (x, s, (cache, c)), img
-          | Some y ->
-            let (y, s, c), img = w (y, s, c) in
-            let x = Optic.Prism.make prism y in
-            let img = Dag.into eq_prism prism img in
-            let cache = Some (x, s, img) in
-            (x, s, (cache, c)), img) )
+           | None ->
+             let img = Dag.empty () in
+             let cache = Some (x, s, img) in
+             (x, s, (cache, c)), img
+           | Some y ->
+             let (y, s, c), img = w (y, s, c) in
+             let x = Optic.Prism.make prism y in
+             let img = Dag.into eq_prism prism img in
+             let cache = Some (x, s, img) in
+             (x, s, (cache, c)), img) )
 
 let cond predicate w = into (Prism.satisfy predicate) w
 let cond_forget predicate w = case (Prism.satisfy predicate) w
@@ -146,7 +146,7 @@ let dynamic : type a. (a t * a) t =
 let ( <*> ) a b = on Lens.fst a & on Lens.snd b
 
 let initialize : type a b. (a -> b) -> (b option * a, b * a) Optic.iso =
- fun fn ->
+  fun fn ->
   { Optic.Iso.ltor =
       (fun (s0, x) ->
         let s0 =

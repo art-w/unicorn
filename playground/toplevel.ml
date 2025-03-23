@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
- *)
+*)
 
 open Js_of_ocaml
 open Js_of_ocaml_toplevel
@@ -62,8 +62,9 @@ let execute () =
   let content = Js.to_string textbox##.value##trim in
   let content' =
     let len = String.length content in
-    if try content <> "" && content.[len - 1] <> ';' && content.[len - 2] <> ';' with
-       | _ -> true
+    if
+      try content <> "" && content.[len - 1] <> ';' && content.[len - 2] <> ';' with
+      | _ -> true
     then content ^ ";;"
     else content
   in
@@ -72,8 +73,7 @@ let execute () =
 
 let setup_async_hook () =
   Lwt.async_exception_hook
-    := fun exc ->
-         Format.eprintf "exception during Lwt.async: %s@." (Printexc.to_string exc)
+  := fun exc -> Format.eprintf "exception during Lwt.async: %s@." (Printexc.to_string exc)
 
 let setup () =
   let div_unicorn = by_id "unicorn" in
@@ -100,13 +100,13 @@ let refresh () =
 
 let _ =
   Dom_html.window##.onload
-    := Dom_html.handler (fun _ ->
-           let btn = by_id "run" in
-           let _ =
-             Dom_html.addEventListener
-               btn
-               Dom_html.Event.click
-               (Dom.handler (fun _ -> refresh ()))
-               Js._false
-           in
-           refresh ())
+  := Dom_html.handler (fun _ ->
+       let btn = by_id "run" in
+       let _ =
+         Dom_html.addEventListener
+           btn
+           Dom_html.Event.click
+           (Dom.handler (fun _ -> refresh ()))
+           Js._false
+       in
+       refresh ())

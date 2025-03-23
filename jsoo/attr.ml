@@ -14,9 +14,9 @@ let add key value t = M.add key value t
 let merge a b =
   M.merge
     (fun _ ox oy ->
-      match ox, oy with
-      | _, Some _ -> oy
-      | _, None -> ox)
+       match ox, oy with
+       | _, Some _ -> oy
+       | _, None -> ox)
     a
     b
 
@@ -40,10 +40,10 @@ let update ~(node : Dom_html.element Js.t) ~old ~latest =
   ignore
   @@ M.merge
        (fun key ox oy ->
-         (match ox, oy with
-         | Some _, None -> dom_remove ~node key
-         | _, Some attr -> dom_add ~node key attr
-         | _ -> ()) ;
-         None)
+          (match ox, oy with
+           | Some _, None -> dom_remove ~node key
+           | _, Some attr -> dom_add ~node key attr
+           | _ -> ()) ;
+          None)
        old
        latest

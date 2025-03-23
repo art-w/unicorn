@@ -22,8 +22,8 @@ let todo =
 let removable w =
   H.div
     (A.class_ (fun _ -> "view")
-    & into Prism.some w
-    & H.button (A.class_ (fun _ -> "destroy") & E.click (fun _ -> None)))
+     & into Prism.some w
+     & H.button (A.class_ (fun _ -> "destroy") & E.click (fun _ -> None)))
 
 let todo_edit =
   H.input_string
@@ -40,22 +40,22 @@ let todo =
     (into
        Prism.(product id some)
        (A.class_ (fun (edit, t) ->
-            let ok = if t.completed then "completed" else "not-completed" in
-            let edit = if edit then "editing" else "" in
-            ok ^ " " ^ edit)
-       & on Lens.fst (E.doubleclick (fun _ -> true)))
-    & on Lens.snd (removable todo)
-    & case Prism.(product (is true) some) todo_edit)
+          let ok = if t.completed then "completed" else "not-completed" in
+          let edit = if edit then "editing" else "" in
+          ok ^ " " ^ edit)
+        & on Lens.fst (E.doubleclick (fun _ -> true)))
+     & on Lens.snd (removable todo)
+     & case Prism.(product (is true) some) todo_edit)
 
 let removable_cons =
   { Prism.extract =
       (function
-      | x :: xs -> Some (Some x, xs)
-      | [] -> None)
+        | x :: xs -> Some (Some x, xs)
+        | [] -> None)
   ; make =
       (function
-      | Some x, xs -> x :: xs
-      | None, xs -> xs)
+        | Some x, xs -> x :: xs
+        | None, xs -> xs)
   }
 
 let removable_list w =
@@ -117,29 +117,29 @@ let filter name lens =
   H.li
     (H.a
        (cond (fun lens' -> lens == lens') (A.class_ (fun _ -> "selected"))
-       & str name
-       & E.click (fun _ -> lens)))
+        & str name
+        & E.click (fun _ -> lens)))
 
 let filters =
   H.ul
     (A.class_ (fun _ -> "filters")
-    & filter "All" all
-    & filter "Active" active
-    & filter "Completed" completed)
+     & filter "All" all
+     & filter "Active" active
+     & filter "Completed" completed)
 
 let clear_completed =
   cond (List.exists (fun t -> t.completed))
   @@ H.button
        (A.class_ (fun _ -> "clear-completed")
-       & E.click (fun xs -> Lens.get active xs)
-       & str "Clear Completed")
+        & E.click (fun xs -> Lens.get active xs)
+        & str "Clear Completed")
 
 let footer =
   H.footer
     (A.class_ (fun _ -> "footer")
-    & on Lens.snd (H.span (A.class_ (fun _ -> "todo-count") & text count_todos))
-    & on Lens.fst filters
-    & on Lens.snd clear_completed)
+     & on Lens.snd (H.span (A.class_ (fun _ -> "todo-count") & text count_todos))
+     & on Lens.fst filters
+     & on Lens.snd clear_completed)
 
 let app = H.div (header & stateful all (main & footer))
 let () = run ~id:"app" app []

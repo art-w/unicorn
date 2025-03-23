@@ -38,27 +38,27 @@ let always fn = make (Always fn)
 let attr key value = { (empty ()) with attributes = Attr.single key value }
 
 let attach : type a. a t -> a t =
- fun t ->
+  fun t ->
   (match t.s with
-  | Empty -> ()
-  | Text _ -> ()
-  | Event _ -> ()
-  | Always _ -> ()
-  | Node (_, _, child) -> child.parent <- Any t
-  | Iso (_, _, child) -> child.parent <- Any t
-  | On (_, _, child) -> child.parent <- Any t
-  | Into (_, _, child) -> child.parent <- Any t
-  | Dynamic (_, child) -> child.parent <- Any t
-  | Seq (a, b) ->
-    a.parent <- Any t ;
-    b.parent <- Any t) ;
+   | Empty -> ()
+   | Text _ -> ()
+   | Event _ -> ()
+   | Always _ -> ()
+   | Node (_, _, child) -> child.parent <- Any t
+   | Iso (_, _, child) -> child.parent <- Any t
+   | On (_, _, child) -> child.parent <- Any t
+   | Into (_, _, child) -> child.parent <- Any t
+   | Dynamic (_, child) -> child.parent <- Any t
+   | Seq (a, b) ->
+     a.parent <- Any t ;
+     b.parent <- Any t) ;
   t
 
 let create ~attributes s =
   attach { dirty = child_is_dirty s; parent = No_parent; attributes; s }
 
 let rec delete : type a. parent:elt -> a t -> unit =
- fun ~parent t ->
+  fun ~parent t ->
   match t.s with
   | Empty -> ()
   | Text (None, _) -> () (* ? *)
@@ -87,9 +87,9 @@ let rec trigger target =
       trigger inst.parent)
 
 let rec instantiate
-    : type a. parent:elt -> previous:node option -> a t -> a t * node option
+  : type a. parent:elt -> previous:node option -> a t -> a t * node option
   =
- fun ~parent ~previous t ->
+  fun ~parent ~previous t ->
   let attributes = t.attributes in
   match t.s with
   | Empty -> t, previous
@@ -128,9 +128,9 @@ let rec instantiate
     let target = ref No_parent in
     let js_handler =
       Dom.handler (fun ev ->
-          latest_event := Some ev ;
-          trigger !target ;
-          Js._true)
+        latest_event := Some ev ;
+        trigger !target ;
+        Js._true)
     in
     let eid = Dom_html.addEventListener parent typ js_handler Js._false in
     let self = create ~attributes (Event (eq, Some eid, typ, latest_event, handler)) in
@@ -141,30 +141,30 @@ let rec instantiate
     attach self, previous
 
 let rec first : type a. previous:node option -> a t -> node option =
- fun ~previous t ->
+  fun ~previous t ->
   match t.s with
   | Node (elt, _, _) ->
     assert (elt <> None) ;
     (elt :> node option)
   | Seq (a, b) ->
     (match first ~previous:None a with
-    | None -> first ~previous b
-    | found -> found)
+     | None -> first ~previous b
+     | found -> found)
   | Iso (_, _, t) -> first ~previous t
   | On (_, _, t) -> first ~previous t
   | Into (_, _, t) -> first ~previous t
   | _ -> previous
 
 let rec reuse
-    : type a.
-      parent:elt
-      -> previous:node option
-      -> instance:a t
-      -> old:a t
-      -> latest:a t
-      -> a t * node option
+  : type a.
+    parent:elt
+    -> previous:node option
+    -> instance:a t
+    -> old:a t
+    -> latest:a t
+    -> a t * node option
   =
- fun ~parent ~previous ~instance ~old ~latest ->
+  fun ~parent ~previous ~instance ~old ~latest ->
   if old == latest
   then instance, first ~previous instance
   else (
@@ -212,36 +212,36 @@ let rec reuse
       it, previous
     | Iso (eq0, _, instance), Iso (eq1, _, old), Iso (eq2, i2, latest) ->
       (match Eq.check eq0 eq1, Eq.check eq1 eq2 with
-      | Some Refl, Some Refl ->
-        let inst, previous = reuse ~parent ~previous ~instance ~old ~latest in
-        let it = create ~attributes (Iso (eq2, i2, inst)) in
-        it, previous
-      | _ -> no_reuse ())
+       | Some Refl, Some Refl ->
+         let inst, previous = reuse ~parent ~previous ~instance ~old ~latest in
+         let it = create ~attributes (Iso (eq2, i2, inst)) in
+         it, previous
+       | _ -> no_reuse ())
     | On (eq0, _, instance), On (eq1, _, old), On (eq2, l2, latest) ->
       (match Eq.check eq0 eq1, Eq.check eq1 eq2 with
-      | Some Refl, Some Refl ->
-        let inst, previous = reuse ~parent ~previous ~instance ~old ~latest in
-        let it = create ~attributes (On (eq2, l2, inst)) in
-        it, previous
-      | _ -> no_reuse ())
+       | Some Refl, Some Refl ->
+         let inst, previous = reuse ~parent ~previous ~instance ~old ~latest in
+         let it = create ~attributes (On (eq2, l2, inst)) in
+         it, previous
+       | _ -> no_reuse ())
     | Into (eq0, _, instance), Into (eq1, _, old), Into (eq2, l2, latest) ->
       (match Eq.check eq0 eq1, Eq.check eq1 eq2 with
-      | Some Refl, Some Refl ->
-        let inst, previous = reuse ~parent ~previous ~instance ~old ~latest in
-        let it = create ~attributes (Into (eq2, l2, inst)) in
-        it, previous
-      | _ -> no_reuse ())
+       | Some Refl, Some Refl ->
+         let inst, previous = reuse ~parent ~previous ~instance ~old ~latest in
+         let it = create ~attributes (Into (eq2, l2, inst)) in
+         it, previous
+       | _ -> no_reuse ())
     | Dynamic (eq0, instance), Dynamic (eq1, old), Dynamic (eq2, latest) ->
       (match Eq.check eq0 eq1, Eq.check eq1 eq2 with
-      | Some Refl, Some Refl ->
-        let inst, previous = reuse ~parent ~previous ~instance ~old ~latest in
-        let it = create ~attributes (Dynamic (eq2, inst)) in
-        it, previous
-      | _ -> no_reuse ())
+       | Some Refl, Some Refl ->
+         let inst, previous = reuse ~parent ~previous ~instance ~old ~latest in
+         let it = create ~attributes (Dynamic (eq2, inst)) in
+         it, previous
+       | _ -> no_reuse ())
     | Event (eq0, Some _, _, _, _), Event (eq1, _, _, _, _), Event (eq2, _, _, _, _) ->
       (match Eq.check eq0 eq1, Eq.check eq1 eq2 with
-      | Some Refl, Some Refl -> instance, first ~previous instance
-      | _ -> no_reuse ())
+       | Some Refl, Some Refl -> instance, first ~previous instance
+       | _ -> no_reuse ())
     | _ -> no_reuse ())
 
 let redraw ~parent ~instance ~old ~latest =

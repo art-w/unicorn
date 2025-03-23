@@ -58,12 +58,12 @@ module Rules (C : CELL) = struct
       List.concat
       @@ List.mapi
            (fun y row ->
-             List.concat
-             @@ List.mapi
-                  (fun x -> function
-                    | None -> [ x, y ]
-                    | _ -> [])
-                  row)
+              List.concat
+              @@ List.mapi
+                   (fun x -> function
+                      | None -> [ x, y ]
+                      | _ -> [])
+                   row)
            game
     in
     match List.length candidates with
@@ -307,8 +307,8 @@ let square =
   in
   H.div
     (A.class_ (fun _ -> "square")
-    & A.style style
-    & (text @@ fun s -> string_of_int s.value))
+     & A.style style
+     & (text @@ fun s -> string_of_int s.value))
 
 let animate =
   cond (fun anim -> not (Anim.is_done anim))
@@ -339,16 +339,16 @@ let toolbar =
   let btn name act = button (str name & E.click act) in
   A.tabindex (fun _ -> 0)
   & E.keydown (function
-        | 37 -> Game.step_left
-        | 38 -> Game.step_up
-        | 39 -> Game.step_right
-        | 40 -> Game.step_down
-        | _ -> fun g -> g)
+    | 37 -> Game.step_left
+    | 38 -> Game.step_up
+    | 39 -> Game.step_right
+    | 40 -> Game.step_down
+    | _ -> fun g -> g)
   & H.div
       (btn "LEFT" Game.step_left
-      & btn "RIGHT" Game.step_right
-      & btn "UP" Game.step_up
-      & btn "DOWN" Game.step_down)
+       & btn "RIGHT" Game.step_right
+       & btn "UP" Game.step_up
+       & btn "DOWN" Game.step_down)
 
 let toolbar = ifte Game.is_gameover gameover_ui toolbar
 let main = H.div (A.class_ (fun _ -> "game") & H.div (toolbar & game))
