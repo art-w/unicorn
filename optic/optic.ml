@@ -63,6 +63,16 @@ module Lens = struct
   let id = { get = (fun x -> x); put = (fun x _ -> x) }
   let fst = { get = (fun (x, _) -> x); put = (fun x (_, y) -> x, y) }
   let snd = { get = (fun (_, y) -> y); put = (fun y (x, _) -> x, y) }
+
+  let is_value ?(eq = Stdlib.( = )) v =
+    { get = eq v; put = (fun bool x -> if (not bool) || eq x v then x else v) }
+
+  let is prism arg =
+    { get = (fun x -> prism.extract x <> None)
+    ; put =
+        (fun bool x ->
+          if (not bool) || prism.extract x <> None then x else prism.make arg)
+    }
 end
 
 module Prism = struct

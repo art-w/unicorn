@@ -45,6 +45,8 @@ module Lens : sig
   val id : ('a, 'a) lens
   val fst : ('a * 'b, 'a) lens
   val snd : ('a * 'b, 'b) lens
+  val is_value : ?eq:('a -> 'a -> bool) -> 'a -> ('a, bool) lens
+  val is : ('a, 'b) prism -> 'b -> ('a, bool) lens
 end
 
 module Prism : sig

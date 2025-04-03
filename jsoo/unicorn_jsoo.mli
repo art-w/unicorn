@@ -162,7 +162,12 @@ val text : ('a -> string) -> 'a t
 (** [text f] renders a dynamic string using the function [f] on the current state. *)
 
 val checkbox : bool t
-(** [checkbox] is a primitive widget to render and edit a boolean. *)
+(** [checkbox] is a primitive widget to render and edit a boolean. See {!H.checkbox}. *)
+
+val radio : ?id:string -> unit -> bool t
+(** [radio ()] is a primitive widget to render and edit a boolean. The optional
+    [~id] parameter can be combined with a [H.label (A.for_ id & str "...")] to
+    facilitate the user selection. See {!H.radio}. *)
 
 val input_int : int t
 (** [input_int] is a primitive widget to render and edit an integer as a text input. *)
@@ -207,6 +212,7 @@ module H : sig
   val button : 'a t -> 'a t
   val input_string : ('a, string) lens -> 'a t list -> 'a t
   val checkbox : ('a, bool) lens -> 'a t list -> 'a t
+  val radio : ('a, bool) lens -> 'a t list -> 'a t
 
   (** {2 Unsafe}
       Consider submitting a PR if you find yourself using this!
@@ -234,6 +240,7 @@ module A : sig
   val id : ('a -> string) -> 'a t
   val class_ : ('a -> string) -> 'a t
   val style : ('a -> string) -> 'a t
+  val name : ('a -> string) -> 'a t
   val for_ : ('a -> string) -> 'a t
   val disabled : ('a -> bool) -> 'a t
   val tabindex : ('a -> int) -> 'a t

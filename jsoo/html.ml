@@ -37,6 +37,7 @@ module A = struct
   let make_string key show = make key (fun x -> Attr.String (show x))
   let make_int key show = make_string key (fun x -> string_of_int (show x))
   let id fn = make_string "id" fn
+  let name fn = make_string "name" fn
   let for_ fn = make_string "for" fn
   let value fn = make_string "value" fn
   let type_ fn = make_string "type" fn
@@ -136,39 +137,43 @@ module H = struct
   let header t = make "header" t
   let footer t = make "footer" t
 
-  let checkbox lens children =
+  let input_of_event ev fn =
+    Js.Opt.case
+      ev##.target
+      (fun () -> failwith "event without a target?")
+      (fun t ->
+         Js.Opt.case (Dom_html.CoerceTo.input t) (fun () -> failwith "not an input?") fn)
+
+  let input_checked ~kind lens children =
     input
-      (A.type_ (fun _ -> "checkbox")
+      (A.type_ (fun _ -> kind)
        & E.input (fun ev x ->
-         Js.Opt.case
-           ev##.target
-           (fun () -> failwith "event without a target?")
-           (fun t ->
-              Js.Opt.case
-                (Dom_html.CoerceTo.input t)
-                (fun () -> failwith "not an input?")
-                (fun t -> Optic.Lens.put lens (Js.to_bool t##.checked) x)))
+         input_of_event ev (fun t -> Optic.Lens.put lens (Js.to_bool t##.checked) x))
        & A.checked (Optic.Lens.get lens)
        & of_list children)
+
+  let checkbox lens children = input_checked ~kind:"checkbox" lens children
+  let radio lens children = input_checked ~kind:"radio" lens children
 
   let input_string lens children =
     input
       (A.type_ (fun _ -> "text")
        & A.value (Optic.Lens.get lens)
        & E.input (fun ev x ->
-         Js.Opt.case
-           ev##.target
-           (fun () -> failwith "event without a target?")
-           (fun t ->
-              Js.Opt.case
-                (Dom_html.CoerceTo.input t)
-                (fun () -> failwith "not an input?")
-                (fun t -> Optic.Lens.put lens (Js.to_string t##.value) x)))
+         input_of_event ev (fun t -> Optic.Lens.put lens (Js.to_string t##.value) x))
        & of_list children)
 end
 
 let button = H.button
 let checkbox = H.checkbox Optic.Lens.id []
+
+let radio ?id () =
+  H.radio
+    Optic.Lens.id
+    (match id with
+     | None -> []
+     | Some id -> [ A.id (fun _ -> id) ])
+
 let input_string = H.input_string Optic.Lens.id []
 let string_of_array t = String.init (Array.length t) (Array.get t)
 
