@@ -44,6 +44,7 @@ module A = struct
   let class_ fn = make_string "class" fn
   let style fn = make_string "style" fn
   let checked fn = make_bool "checked" fn
+  let selected fn = make_bool "selected" fn
   let disabled fn = make_bool "disabled" fn
   let tabindex fn = make_int "tabindex" fn
   let placeholder fn = make_string "placeholder" fn
@@ -136,6 +137,7 @@ module H = struct
   let section t = make "section" t
   let header t = make "header" t
   let footer t = make "footer" t
+  let select t = make "select" t
 
   let input_of_event ev fn =
     Js.Opt.case
@@ -155,6 +157,20 @@ module H = struct
   let checkbox lens children = input_checked ~kind:"checkbox" lens children
   let radio lens children = input_checked ~kind:"radio" lens children
 
+  let option ~value lens t =
+    make "option" (A.value (fun _ -> value) & A.selected (Optic.Lens.get lens) & t)
+    & E.change (fun ev x ->
+      Js.Opt.case
+        ev##.target
+        (fun () -> failwith "event without a target?")
+        (fun t ->
+           Js.Opt.case
+             (Dom_html.CoerceTo.select t)
+             (fun () -> failwith "not a select?")
+             (fun t ->
+                let bool = Js.to_string t##.value = value in
+                Optic.Lens.put lens bool x)))
+
   let input_string lens children =
     input
       (A.type_ (fun _ -> "text")
@@ -173,6 +189,14 @@ let radio ?id () =
     (match id with
      | None -> []
      | Some id -> [ A.id (fun _ -> id) ])
+
+let select lst =
+  H.select
+  @@ of_list
+  @@ List.mapi (fun i (lens, t) -> H.option ~value:(string_of_int i) lens t) lst
+
+let select_from ?eq lst =
+  select @@ List.map (fun (v, t) -> Optic.Lens.is_value ?eq v, t) lst
 
 let input_string = H.input_string Optic.Lens.id []
 let string_of_array t = String.init (Array.length t) (Array.get t)

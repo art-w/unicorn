@@ -182,6 +182,14 @@ val button : 'a t -> 'a t
       {[button (str "Click" & E.click (fun old_state -> new_state))]}
 *)
 
+val select : (('a, bool) lens * 'a t) list -> 'a t
+(** [select] is a primitive widget to select from a drop-down list.
+    See {!H.select} and {!H.option}. *)
+
+val select_from : ?eq:('a -> 'a -> bool) -> ('a * 'a t) list -> 'a t
+(** Specialized version of {!select} to pick a value from a static list of
+    values. *)
+
 module H : sig
   (** HTML elements and nodes, like div, span, etc. *)
 
@@ -213,6 +221,8 @@ module H : sig
   val input_string : ('a, string) lens -> 'a t list -> 'a t
   val checkbox : ('a, bool) lens -> 'a t list -> 'a t
   val radio : ('a, bool) lens -> 'a t list -> 'a t
+  val select : 'a t -> 'a t
+  val option : value:string -> ('a, bool) lens -> 'a t -> 'a t
 
   (** {2 Unsafe}
       Consider submitting a PR if you find yourself using this!
