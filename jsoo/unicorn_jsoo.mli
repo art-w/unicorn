@@ -219,6 +219,16 @@ module H : sig
   val footer : 'a t -> 'a t
   val button : 'a t -> 'a t
   val input_string : ('a, string) lens -> 'a t list -> 'a t
+  val input_int : ('a, int) lens -> 'a t list -> 'a t
+
+  val input_parser
+    :  ?eq:('b -> 'b -> bool)
+    -> ?clean:(string -> string)
+    -> ('a, 'b) lens
+    -> ('b, string) iso
+    -> 'a t list
+    -> 'a t
+
   val checkbox : ('a, bool) lens -> 'a t list -> 'a t
   val radio : ('a, bool) lens -> 'a t list -> 'a t
   val select : 'a t -> 'a t

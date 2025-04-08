@@ -178,6 +178,45 @@ module H = struct
        & E.input (fun ev x ->
          input_of_event ev (fun t -> Optic.Lens.put lens (Js.to_string t##.value) x))
        & of_list children)
+
+  let input_parser ?(eq = ( = )) ?(clean = Fun.id) lens iso_string attributes =
+    stateful None
+    @@ iso
+         { Optic.Iso.ltor =
+             (fun (opt, t) ->
+               let j = Optic.Lens.get lens t in
+               match opt with
+               | Some (i, str) when eq i j -> str, t
+               | _ -> Optic.Iso.ltor iso_string j, t)
+         ; rtol =
+             (fun (str, t) ->
+               let str = clean str in
+               let i = Optic.Iso.rtol iso_string str in
+               Some (i, str), Optic.Lens.put lens i t)
+         }
+    @@ input_string Optic.Lens.fst
+    @@ List.map (on Optic.Lens.snd) attributes
+
+  let input_int lens attributes =
+    let parseable_int s =
+      let buf = Buffer.create (String.length s) in
+      String.iter
+        (function
+          | '-' when Buffer.length buf > 0 -> ()
+          | ('-' | '0' .. '9') as chr -> Buffer.add_char buf chr
+          | _ -> ())
+        s ;
+      Buffer.contents buf
+    in
+    let iso_string =
+      { Optic.Iso.ltor = string_of_int
+      ; rtol =
+          (function
+            | "" -> 0
+            | s -> int_of_string s)
+      }
+    in
+    input_parser ~clean:parseable_int lens iso_string attributes
 end
 
 let button = H.button
@@ -199,29 +238,4 @@ let select_from ?eq lst =
   select @@ List.map (fun (v, t) -> Optic.Lens.is_value ?eq v, t) lst
 
 let input_string = H.input_string Optic.Lens.id []
-let string_of_array t = String.init (Array.length t) (Array.get t)
-
-let digits str =
-  string_of_array
-  @@ Array.of_list
-  @@ List.rev
-  @@ String.fold_left
-       (fun acc chr ->
-          if (chr >= '0' && chr <= '9') || chr = '-' then chr :: acc else acc)
-       []
-       str
-
-let input_int =
-  stateful_by (fun i -> i, string_of_int i)
-  @@ iso
-       { Optic.Iso.ltor = (fun ((i, str), j) -> if i = j then str else string_of_int j)
-       ; rtol =
-           (fun x ->
-             let x = digits x in
-             try
-               let i = int_of_string x in
-               (i, x), i
-             with
-             | _ -> (0, x), 0)
-       }
-  @@ input_string
+let input_int = H.input_int Optic.Lens.id []
